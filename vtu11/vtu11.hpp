@@ -59,7 +59,8 @@ void writeVtu( const std::string& filename,
                MeshGenerator& mesh,
                const std::vector<DataSetInfo>& dataSetInfo,
                const std::vector<DataSetData>& dataSetData,
-               const std::string& writeMode = "RawBinaryCompressed" );
+               const std::string& writeMode = "RawBinaryCompressed",
+	       double time = -1.0);
 
 //! Creates path/baseName.pvtu and path/baseName directory
 void writePVtu( const std::string& path,

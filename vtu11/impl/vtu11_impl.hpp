@@ -137,12 +137,28 @@ void writeVtu( const std::string& filename,
                MeshGenerator& mesh,
                const std::vector<DataSetInfo>& dataSetInfo,
                const std::vector<DataSetData>& dataSetData,
-               Writer&& writer )
+               Writer&& writer,
+	       double time)
 {
     detail::writeVTUFile( filename, "UnstructuredGrid", writer, [&]( std::ostream& output )
     {
         {
             ScopedXmlTag unstructuredGridFileTag( output, "UnstructuredGrid", { } );
+	    {
+	      if (time != -1.0) {
+		ScopedXmlTag fieldData( output, "FieldData", { } );
+		{
+		  ScopedXmlTag fieldDataTag( output, "DataArray",
+					     { { "type", "Float64" },
+					       { "Name", "TimeValue" },
+					       { "NumberOfTuples", "1" }
+					     } );
+		  char buffer[64];
+		  detail::writeNumber( buffer, time );
+		  output << buffer << "\n";
+		}
+	      } // FieldData
+	    }
             {
                 ScopedXmlTag pieceTag( output, "Piece", 
                 { 
@@ -209,7 +225,8 @@ void writeVtu( const std::string& filename,
                MeshGenerator& mesh,
                const std::vector<DataSetInfo>& dataSetInfo,
                const std::vector<DataSetData>& dataSetData,
-               const std::string& writeMode )
+               const std::string& writeMode,
+	       double time)
 {
     auto mode = writeMode;
 
@@ -218,26 +235,26 @@ void writeVtu( const std::string& filename,
 
     if( mode == "ascii" )
     {
-        detail::writeVtu( filename, mesh, dataSetInfo, dataSetData, AsciiWriter { } );
+      detail::writeVtu( filename, mesh, dataSetInfo, dataSetData, AsciiWriter { }, time );
     }
     else if( mode == "base64inline" )
     {
-        detail::writeVtu( filename, mesh, dataSetInfo, dataSetData, Base64BinaryWriter { } );
+      detail::writeVtu( filename, mesh, dataSetInfo, dataSetData, Base64BinaryWriter { }, time );
     }
     else if( mode == "base64appended" )
     {
-        detail::writeVtu( filename, mesh, dataSetInfo, dataSetData, Base64BinaryAppendedWriter { } );
+      detail::writeVtu( filename, mesh, dataSetInfo, dataSetData, Base64BinaryAppendedWriter { }, time );
     }
     else if( mode == "rawbinary" )
     {
-        detail::writeVtu( filename, mesh, dataSetInfo, dataSetData, RawBinaryAppendedWriter { } );
+      detail::writeVtu( filename, mesh, dataSetInfo, dataSetData, RawBinaryAppendedWriter { }, time );
     }
     else if( mode == "rawbinarycompressed" )
     {
         #ifdef VTU11_ENABLE_ZLIB
-            detail::writeVtu( filename, mesh, dataSetInfo, dataSetData, CompressedRawBinaryAppendedWriter { } );
+      detail::writeVtu( filename, mesh, dataSetInfo, dataSetData, CompressedRawBinaryAppendedWriter { }, time );
         #else
-            detail::writeVtu( filename, mesh, dataSetInfo, dataSetData, RawBinaryAppendedWriter { } );
+      detail::writeVtu( filename, mesh, dataSetInfo, dataSetData, RawBinaryAppendedWriter { }, time );
         #endif
     }
     else
